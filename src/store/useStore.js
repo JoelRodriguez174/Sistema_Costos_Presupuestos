@@ -72,41 +72,41 @@ export const INITIAL_VOUCHERS = [
     associatedProduct: 'prod-1'
   },
 
-  // Mano de Obra Directa (MOD)
+  // Masa Consolidada de Indirectos (CIF/SIF) - Rubro: Mano de Obra General / Indirecta (MOI)
   {
     id: 'v-5',
-    concept: 'Honorarios / Comisiones Estilistas por Corte y Peinado',
+    concept: 'Honorarios y Comisiones Estilistas por Corte y Peinado',
     amount: 2100000,
-    functionalType: 'direct_labor',
+    functionalType: 'indirect_labor',
     behavior: 'variable',
-    associatedProduct: 'prod-1'
+    associatedProduct: 'all'
   },
   {
     id: 'v-6',
-    concept: 'Honorarios Coloristas Especializados',
+    concept: 'Honorarios Coloristas Especializados del Salón',
     amount: 2268000,
-    functionalType: 'direct_labor',
+    functionalType: 'indirect_labor',
     behavior: 'variable',
-    associatedProduct: 'prod-2'
+    associatedProduct: 'all'
   },
   {
     id: 'v-7',
     concept: 'Honorarios Técnicos de Tratamientos Capilares',
     amount: 960000,
-    functionalType: 'direct_labor',
+    functionalType: 'indirect_labor',
     behavior: 'variable',
-    associatedProduct: 'prod-3'
+    associatedProduct: 'all'
   },
   {
     id: 'v-8',
-    concept: 'Sueldo Ayudantes y Lavacabezas Salón',
+    concept: 'Sueldo Fijo Ayudantes y Lavacabezas Salón',
     amount: 1350000,
-    functionalType: 'direct_labor',
-    behavior: 'variable',
-    associatedProduct: 'prod-4'
+    functionalType: 'indirect_labor',
+    behavior: 'fixed',
+    associatedProduct: 'all'
   },
 
-  // Costos Indirectos de Fabricación / Salón (CIF)
+  // Masa Consolidada de Indirectos (CIF/SIF) - Rubro: Costos Indirectos de Fabricación / Salón (CIF)
   {
     id: 'v-9',
     concept: 'Servicio Eléctrico Salón (Secadores, climazores, planchas)',
@@ -148,7 +148,7 @@ export const INITIAL_VOUCHERS = [
     associatedProduct: 'all'
   },
 
-  // Gastos Administrativos / Comercialización
+  // Masa Consolidada de Indirectos (CIF/SIF) - Rubro: Gastos Administrativos / Comercialización
   {
     id: 'v-14',
     concept: 'Publicidad en Instagram/TikTok Ads y Promociones Salón',
@@ -184,66 +184,107 @@ const useStore = create(
       cifBase: 'unidades_vendidas',
       targetUtility: 30,
       simOverrides: {},
+      activeSalesScenario: null,
+      activePriceScenario: null,
 
-      // Core Financial Calculation Selector
+      // Core Financial Calculation Selector con Masa Consolidada CIF/SIF y Driver de Asignación 100%
       getMetrics: () => {
         const { products, vouchers, cifBase, targetUtility, simOverrides } = get();
 
-        // Resolve products with overrides
+        // 1. Consolidación de la Base de Costos Indirectos (CIF/SIF) en una sola pasada (O(N))
+        // Agrupa: Mano de Obra General (MOI) + CIF de Salón + Gastos Fijos de Admin/Ventas
+        // Cero gastos flotantes sin asignar.
+        let totalCifConsolidado = 0;
+        let variableCifConsolidado = 0;
+        let fixedCifConsolidado = 0;
+        let moiTotal = 0;
+        let cifOperativoTotal = 0;
+        let gastosAdminVentasTotal = 0;
+        let totalDirectMaterials = 0;
+        let directMaterialsVariable = 0;
+        let directMaterialsFixed = 0;
+
+        for (const v of vouchers) {
+          if (v.functionalType === 'direct_materials') {
+            totalDirectMaterials += v.amount;
+            if (v.behavior === 'fixed') {
+              directMaterialsFixed += v.amount;
+            } else {
+              directMaterialsVariable += v.amount;
+            }
+          } else {
+            totalCifConsolidado += v.amount;
+            if (v.behavior === 'variable') {
+              variableCifConsolidado += v.amount;
+            } else {
+              fixedCifConsolidado += v.amount;
+            }
+
+            if (v.functionalType === 'indirect_labor' || v.functionalType === 'direct_labor') {
+              moiTotal += v.amount;
+            } else if (v.functionalType === 'cif') {
+              cifOperativoTotal += v.amount;
+            } else if (v.functionalType === 'fixed_gasto') {
+              gastosAdminVentasTotal += v.amount;
+            }
+          }
+        }
+
+        // 2. Cálculo del total del Driver configurado por el usuario
+        let totalBaseDriver = 0;
+        products.forEach(prod => {
+          const baseUnits = (prod.baseUnitsSold !== undefined ? prod.baseUnitsSold : prod.unitsSold) || 0;
+          const baseHours = (prod.baseProductionHours !== undefined ? prod.baseProductionHours : prod.productionHours) || 0;
+          totalBaseDriver += cifBase === 'unidades_vendidas' ? baseUnits : baseHours;
+        });
+
+        // 3. Resolución de productos con overrides de simulación
         const resolvedProducts = products.map(prod => {
           const override = simOverrides[prod.id] || {};
           return {
             ...prod,
+            basePrice: prod.price,
+            baseUnitsSold: prod.unitsSold,
+            baseProductionHours: prod.productionHours,
             price: override.price !== undefined ? override.price : prod.price,
             unitsSold: override.unitsSold !== undefined ? override.unitsSold : prod.unitsSold,
             productionHours: override.productionHours !== undefined ? override.productionHours : prod.productionHours
           };
         });
 
-        const resolvedVouchers = vouchers;
+        // 4. Detalle y asignación del 100% de la base consolidada vía Driver
+        const productDetails = productDetailsList(
+          resolvedProducts, 
+          vouchers, 
+          cifBase, 
+          totalBaseDriver, 
+          totalCifConsolidado, 
+          variableCifConsolidado, 
+          fixedCifConsolidado, 
+          targetUtility
+        );
 
-        // 1. Calculate CIF totals
-        const cifVouchers = resolvedVouchers.filter(v => v.functionalType === 'cif');
-        const totalCIF = cifVouchers.reduce((acc, curr) => acc + curr.amount, 0);
-        const variableCIF = cifVouchers.filter(v => v.behavior === 'variable').reduce((acc, v) => acc + v.amount, 0);
-        const fixedCIF = cifVouchers.filter(v => v.behavior === 'fixed').reduce((acc, v) => acc + v.amount, 0);
-
-        // Calculate CIF distribution base total
-        let totalBaseValue = 0;
-        resolvedProducts.forEach(prod => {
-          totalBaseValue += cifBase === 'unidades_vendidas' ? prod.unitsSold : prod.productionHours;
-        });
-
-        // 2. Compute details per product
-        const productDetails = productDetailsList(resolvedProducts, resolvedVouchers, cifBase, totalBaseValue, totalCIF, variableCIF, targetUtility);
-
-        // 3. Global aggregates
+        // 5. Agregados Globales y Rentabilidad
         const totalRevenue = productDetails.reduce((acc, p) => acc + p.revenue, 0);
         const totalVariableCosts = productDetails.reduce((acc, p) => acc + p.variableCostsTotal, 0);
         const totalContributionMargin = totalRevenue - totalVariableCosts;
         const averageIMC = totalRevenue > 0 ? (totalContributionMargin / totalRevenue) : 0;
 
-        // Fixed non-production expenses
-        const totalFixedGasto = resolvedVouchers.filter(v => v.functionalType === 'fixed_gasto').reduce((acc, curr) => acc + curr.amount, 0);
-
-        // Direct Fixed Costs (from products: MPD or MOD marked as fixed)
-        const directFixedTotal = resolvedProducts.reduce((acc, prod) => {
-          const productDirectVouchers = resolvedVouchers.filter(v => 
-            v.associatedProduct === prod.id && 
-            (v.functionalType === 'direct_materials' || v.functionalType === 'direct_labor')
-          );
-          return acc + productDirectVouchers.filter(v => v.behavior === 'fixed').reduce((vAcc, v) => vAcc + v.amount, 0);
-        }, 0);
-
-        const totalFixedCosts = directFixedTotal + fixedCIF + totalFixedGasto;
+        // Estructura completa de costos fijos consolidados (absorbidos al 100%)
+        const totalFixedCosts = fixedCifConsolidado + directMaterialsFixed;
         const resultadoOperativo = totalContributionMargin - totalFixedCosts;
 
-        // Multi-product Break-Even Point
+        // Punto de Equilibrio consolidado multi-producto
         const breakEvenPesos = averageIMC > 0 ? (totalFixedCosts / averageIMC) : 0;
         
         const totalUnitsSold = resolvedProducts.reduce((acc, p) => acc + p.unitsSold, 0);
         const weightedMC = totalUnitsSold > 0 ? (totalContributionMargin / totalUnitsSold) : 0;
         const breakEvenUnits = weightedMC > 0 ? (totalFixedCosts / weightedMC) : 0;
+
+        // Indicadores ejecutivos orientados al cliente (KPI Dashboard & Financial Modeling)
+        const coverageRatio = totalFixedCosts > 0 ? (totalContributionMargin / totalFixedCosts) * 100 : 0;
+        const safetyMarginPesos = Math.max(0, totalRevenue - breakEvenPesos);
+        const safetyMarginPercent = totalRevenue > 0 ? (safetyMarginPesos / totalRevenue) * 100 : 0;
 
         return {
           productDetails,
@@ -251,16 +292,22 @@ const useStore = create(
           totalVariableCosts,
           totalContributionMargin,
           averageIMC,
-          totalFixedGasto,
           totalFixedCosts,
           resultadoOperativo,
           breakEvenPesos,
           breakEvenUnits,
           totalUnitsSold,
-          totalCIF,
-          variableCIF,
-          fixedCIF,
-          directFixedTotal
+          totalCifConsolidado,
+          variableCifConsolidado,
+          fixedCifConsolidado,
+          moiTotal,
+          cifOperativoTotal,
+          gastosAdminVentasTotal,
+          totalDirectMaterials,
+          totalBaseDriver,
+          coverageRatio,
+          safetyMarginPesos,
+          safetyMarginPercent
         };
       },
 
@@ -293,7 +340,10 @@ const useStore = create(
       
       updateSimOverride: (prodId, field, value) => set((state) => {
         const override = state.simOverrides[prodId] || {};
+        const isSalesField = field === 'unitsSold';
         return {
+          activeSalesScenario: isSalesField ? null : state.activeSalesScenario,
+          activePriceScenario: !isSalesField ? null : state.activePriceScenario,
           simOverrides: {
             ...state.simOverrides,
             [prodId]: {
@@ -303,7 +353,102 @@ const useStore = create(
           }
         };
       }),
-      clearSimOverrides: () => set({ simOverrides: {} }),
+
+      resetProductOverride: (prodId) => set((state) => {
+        const updated = { ...state.simOverrides };
+        delete updated[prodId];
+        const hasRemaining = Object.keys(updated).length > 0;
+        return { 
+          simOverrides: updated,
+          activeSalesScenario: hasRemaining ? state.activeSalesScenario : null,
+          activePriceScenario: hasRemaining ? state.activePriceScenario : null
+        };
+      }),
+
+      // Escenarios de Ventas (Volumen)
+      applySalesScenario: (scenarioType) => set((state) => {
+        const isTogglingOff = state.activeSalesScenario === scenarioType;
+        const newSalesScenario = isTogglingOff ? null : scenarioType;
+        const newOverrides = { ...state.simOverrides };
+        const { products } = state;
+
+        products.forEach(prod => {
+          const current = newOverrides[prod.id] ? { ...newOverrides[prod.id] } : {};
+          if (isTogglingOff) {
+            delete current.unitsSold;
+          } else if (scenarioType === 'sales_plus_30') {
+            current.unitsSold = Math.round(prod.unitsSold * 1.30);
+          } else if (scenarioType === 'sales_plus_20') {
+            current.unitsSold = Math.round(prod.unitsSold * 1.20);
+          } else if (scenarioType === 'sales_plus_10') {
+            current.unitsSold = Math.round(prod.unitsSold * 1.10);
+          } else if (scenarioType === 'sales_minus_15') {
+            current.unitsSold = Math.max(0, Math.round(prod.unitsSold * 0.85));
+          } else if (scenarioType === 'sales_minus_25') {
+            current.unitsSold = Math.max(0, Math.round(prod.unitsSold * 0.75));
+          } else if (scenarioType === 'breakeven') {
+            const metrics = state.getMetrics();
+            const beUnits = metrics.breakEvenUnits;
+            const totalUnits = metrics.totalUnitsSold;
+            const mix = totalUnits > 0 ? (prod.unitsSold / totalUnits) : (1 / products.length);
+            current.unitsSold = Math.round(beUnits * mix);
+          }
+
+          if (Object.keys(current).length > 0) {
+            newOverrides[prod.id] = current;
+          } else {
+            delete newOverrides[prod.id];
+          }
+        });
+
+        return { simOverrides: newOverrides, activeSalesScenario: newSalesScenario };
+      }),
+
+      // Escenarios de Precios (Tarifas)
+      applyPriceScenario: (scenarioType) => set((state) => {
+        const isTogglingOff = state.activePriceScenario === scenarioType;
+        const newPriceScenario = isTogglingOff ? null : scenarioType;
+        const newOverrides = { ...state.simOverrides };
+        const { products } = state;
+
+        products.forEach(prod => {
+          const current = newOverrides[prod.id] ? { ...newOverrides[prod.id] } : {};
+          if (isTogglingOff) {
+            delete current.price;
+          } else if (scenarioType === 'price_plus_25') {
+            current.price = Math.round(prod.price * 1.25);
+          } else if (scenarioType === 'price_plus_15') {
+            current.price = Math.round(prod.price * 1.15);
+          } else if (scenarioType === 'price_plus_10') {
+            current.price = Math.round(prod.price * 1.10);
+          } else if (scenarioType === 'price_minus_10') {
+            current.price = Math.max(10, Math.round(prod.price * 0.90));
+          } else if (scenarioType === 'price_minus_20') {
+            current.price = Math.max(10, Math.round(prod.price * 0.80));
+          }
+
+          if (Object.keys(current).length > 0) {
+            newOverrides[prod.id] = current;
+          } else {
+            delete newOverrides[prod.id];
+          }
+        });
+
+        return { simOverrides: newOverrides, activePriceScenario: newPriceScenario };
+      }),
+
+      // Dispatcher flexible compatible con llamadas anteriores
+      applyPresetScenario: (scenarioType) => {
+        if (scenarioType === 'reset') {
+          get().clearSimOverrides();
+        } else if (['sales_plus_30', 'sales_plus_20', 'sales_plus_10', 'sales_minus_15', 'sales_minus_25', 'breakeven', 'units_plus_20', 'units_minus_20'].includes(scenarioType)) {
+          get().applySalesScenario(scenarioType === 'units_plus_20' ? 'sales_plus_20' : scenarioType === 'units_minus_20' ? 'sales_minus_15' : scenarioType);
+        } else {
+          get().applyPriceScenario(scenarioType);
+        }
+      },
+
+      clearSimOverrides: () => set({ simOverrides: {}, activeSalesScenario: null, activePriceScenario: null }),
       
       resetToDefaults: () => set({
         products: INITIAL_PRODUCTS,
@@ -314,7 +459,7 @@ const useStore = create(
       })
     }),
     {
-      name: 'sistema-costo-presupuesto-storage-v2',
+      name: 'sistema-costo-presupuesto-storage-v3',
       partialize: (state) => ({
         products: state.products,
         vouchers: state.vouchers,
@@ -329,6 +474,14 @@ const useStore = create(
         }
         if (!merged.vouchers || merged.vouchers.length === 0) {
           merged.vouchers = INITIAL_VOUCHERS;
+        } else {
+          // Migración automática: direct_labor se convierte a indirect_labor y associatedProduct a 'all'
+          merged.vouchers = merged.vouchers.map(v => {
+            if (v.functionalType === 'direct_labor') {
+              return { ...v, functionalType: 'indirect_labor', associatedProduct: 'all' };
+            }
+            return v;
+          });
         }
         return merged;
       }
@@ -336,64 +489,99 @@ const useStore = create(
   )
 );
 
-// Helper function for mapping details (always uses margin-based suggested price)
-const productDetailsList = (resolvedProducts, resolvedVouchers, cifBase, totalBaseValue, totalCIF, variableCIF, targetUtility) => {
+// Helper de Costeo: Costo Total = [MPD Directo] + [Cuota Asignada CIF/SIF Consolidada vía Driver 100%]
+const productDetailsList = (
+  resolvedProducts, 
+  vouchers, 
+  cifBase, 
+  totalBaseDriver, 
+  totalCifConsolidado, 
+  variableCifConsolidado, 
+  fixedCifConsolidado, 
+  targetUtility
+) => {
+  // Pre-indexar insumos directos por producto en O(N) para acceso O(1) (js-index-maps)
+  const matByProduct = new Map();
+  for (const v of vouchers) {
+    if (v.functionalType === 'direct_materials' && v.associatedProduct) {
+      const current = matByProduct.get(v.associatedProduct) || { total: 0, variable: 0, fixed: 0 };
+      current.total += v.amount;
+      if (v.behavior === 'fixed') {
+        current.fixed += v.amount;
+      } else {
+        current.variable += v.amount;
+      }
+      matByProduct.set(v.associatedProduct, current);
+    }
+  }
+
   return resolvedProducts.map(prod => {
-    const productDirectVouchers = resolvedVouchers.filter(v => 
-      v.associatedProduct === prod.id && 
-      (v.functionalType === 'direct_materials' || v.functionalType === 'direct_labor')
-    );
-    
-    const matVouchers = productDirectVouchers.filter(v => v.functionalType === 'direct_materials');
-    const directMaterials = matVouchers.reduce((acc, curr) => acc + curr.amount, 0);
-    
-    const modVouchers = productDirectVouchers.filter(v => v.functionalType === 'direct_labor');
-    const directLabor = modVouchers.reduce((acc, curr) => acc + curr.amount, 0);
-    
-    const totalDirectCost = directMaterials + directLabor;
-    const directCostUnitario = prod.unitsSold > 0 ? (totalDirectCost / prod.unitsSold) : 0;
-    const materialsUnitario = prod.unitsSold > 0 ? (directMaterials / prod.unitsSold) : 0;
-    const laborUnitario = prod.unitsSold > 0 ? (directLabor / prod.unitsSold) : 0;
+    // 1. Materia Prima Directa (MPD)
+    const mat = matByProduct.get(prod.id) || { total: 0, variable: 0, fixed: 0 };
+    const directMaterials = mat.total;
+    const baseUnits = Math.max(0, (prod.baseUnitsSold !== undefined ? prod.baseUnitsSold : prod.unitsSold) || 0);
+    const baseHours = Math.max(0, (prod.baseProductionHours !== undefined ? prod.baseProductionHours : prod.productionHours) || 0);
 
-    const directVariable = productDirectVouchers.filter(v => v.behavior === 'variable').reduce((acc, v) => acc + v.amount, 0);
-    const directVariableUnitario = prod.unitsSold > 0 ? (directVariable / prod.unitsSold) : 0;
+    const directMaterialsUnitario = baseUnits > 0 ? (directMaterials / baseUnits) : 0;
+    const directVariableUnitario = baseUnits > 0 ? (mat.variable / baseUnits) : 0;
+    const directFixedUnitario = baseUnits > 0 ? (mat.fixed / baseUnits) : 0;
 
-    const baseValue = cifBase === 'unidades_vendidas' ? prod.unitsSold : prod.productionHours;
-    const cifPercentage = totalBaseValue > 0 ? (baseValue / totalBaseValue) : 0;
-    
-    const allocatedCIF = totalCIF * cifPercentage;
-    const allocatedVariableCIF = variableCIF * cifPercentage;
+    // 2. Motor de Asignación vía Driver (100% de la masa de indirectos distribuida)
+    const driverValue = cifBase === 'unidades_vendidas' ? baseUnits : baseHours;
+    const cifPercentage = totalBaseDriver > 0 ? (driverValue / totalBaseDriver) : (resolvedProducts.length > 0 ? (1 / resolvedProducts.length) : 0);
 
-    const cifUnitario = prod.unitsSold > 0 ? (allocatedCIF / prod.unitsSold) : 0;
-    const variableCifUnitario = prod.unitsSold > 0 ? (allocatedVariableCIF / prod.unitsSold) : 0;
+    // Cuotas de CIF/SIF consolidado asignadas a este producto
+    const allocatedCifTotal = totalCifConsolidado * cifPercentage;
+    const allocatedVariableCif = variableCifConsolidado * cifPercentage;
+    const allocatedFixedCif = fixedCifConsolidado * cifPercentage;
 
-    const costoTotalUnitario = directCostUnitario + cifUnitario;
+    const cifUnitario = baseUnits > 0 ? (allocatedCifTotal / baseUnits) : 0;
+    const variableCifUnitario = baseUnits > 0 ? (allocatedVariableCif / baseUnits) : 0;
+    const fixedCifUnitario = baseUnits > 0 ? (allocatedFixedCif / baseUnits) : 0;
+
+    // 3. Determinación de Costos Unitarios
+    // [Costo Directo / Materia Prima] + [Cuota Asignada de CIF/SIF]
+    const costoTotalUnitario = directMaterialsUnitario + cifUnitario;
     const costoVariableUnitario = directVariableUnitario + variableCifUnitario;
 
-    const margenContribucionUnitario = prod.price - costoVariableUnitario;
-    const margenContribucionTotal = margenContribucionUnitario * prod.unitsSold;
-    const imc = prod.price > 0 ? (margenContribucionUnitario / prod.price) : 0;
+    // 4. Rentabilidad y Simulación
+    const simUnits = prod.unitsSold;
+    const simPrice = prod.price;
 
-    const revenue = prod.price * prod.unitsSold;
-    const variableCostsTotal = costoVariableUnitario * prod.unitsSold;
+    const margenContribucionUnitario = simPrice - costoVariableUnitario;
+    const margenContribucionTotal = margenContribucionUnitario * simUnits;
+    const imc = simPrice > 0 ? (margenContribucionUnitario / simPrice) : 0;
 
-    // Pricing calculation based exclusively on Margin: Cost / (1 - Margin%)
-    const suggestedPrice = targetUtility < 100 ? (costoTotalUnitario / (1 - (targetUtility / 100))) : costoTotalUnitario;
+    const revenue = simPrice * simUnits;
+    const variableCostsTotal = costoVariableUnitario * simUnits;
 
-    const coversTotalCost = prod.price >= costoTotalUnitario;
-    const coversVariableCost = prod.price >= costoVariableUnitario;
+    // 5. Precio Sugerido Objetivo con Margen sobre Ventas (Target Margin)
+    const safeUtility = Math.max(0, Math.min(95, targetUtility || 0));
+    const suggestedPrice = safeUtility < 100 ? (costoTotalUnitario / (1 - (safeUtility / 100))) : costoTotalUnitario;
+
+    const coversTotalCost = simPrice >= (costoTotalUnitario - 0.001);
+    const coversVariableCost = simPrice >= (costoVariableUnitario - 0.001);
+
+    // Margen y Utilidad Neta Real por Producto (tras absorber costos fijos y variables)
+    const utilidadNetaUnitaria = simPrice - costoTotalUnitario;
+    const margenNetoPorcentaje = simPrice > 0 ? (utilidadNetaUnitaria / simPrice) : 0;
+    const utilidadNetaTotal = utilidadNetaUnitaria * simUnits;
 
     return {
       ...prod,
       directMaterials,
-      directLabor,
-      totalDirectCost,
-      directCostUnitario,
-      materialsUnitario,
-      laborUnitario,
-      allocatedCIF,
-      cifUnitario,
+      directMaterialsUnitario,
+      totalDirectCost: directMaterials,
+      directCostUnitario: directMaterialsUnitario,
+      directVariableUnitario,
+      directFixedUnitario,
+      allocatedCifTotal,
+      allocatedVariableCif,
+      allocatedFixedCif,
       cifPercentage,
+      cifUnitario,
+      variableCifUnitario,
+      fixedCifUnitario,
       costoTotalUnitario,
       costoVariableUnitario,
       margenContribucionUnitario,
@@ -403,7 +591,10 @@ const productDetailsList = (resolvedProducts, resolvedVouchers, cifBase, totalBa
       variableCostsTotal,
       suggestedPrice,
       coversTotalCost,
-      coversVariableCost
+      coversVariableCost,
+      utilidadNetaUnitaria,
+      margenNetoPorcentaje,
+      utilidadNetaTotal
     };
   });
 };

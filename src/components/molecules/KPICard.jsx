@@ -1,8 +1,8 @@
 import React from 'react';
 
-function KPICard({ title, value, desc, trend, trendDirection, icon: Icon, className = '' }) {
+function KPICard({ title, value, desc, trend, trendDirection, icon: Icon, className = '', style }) {
   return (
-    <div className={`kpi-card ${className}`}>
+    <div className={`kpi-card ${className}`} style={style}>
       <div className="kpi-title">
         <span>{title}</span>
         {Icon && <Icon className="kpi-icon" size={16} />}

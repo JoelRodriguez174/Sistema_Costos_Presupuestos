@@ -41,8 +41,8 @@ function ProductTable({ products, onEdit, onDelete }) {
             <tr>
               <td colSpan="6" className="empty-state">
                 <Package size={32} className="empty-state-icon" />
-                <h3>No hay productos registrados</h3>
-                <p>Haga clic en "Nuevo Producto" para agregar líneas capilares.</p>
+                <h3>No se encontraron productos</h3>
+                <p>No hay productos registrados o que coincidan con la búsqueda actual.</p>
               </td>
             </tr>
           )}

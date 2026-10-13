@@ -24,7 +24,7 @@ function VoucherTable({ vouchers, products, onEdit, onDelete }) {
             
             // Badge color mapping
             let typeColor = 'rose';
-            if (v.functionalType === 'direct_labor') typeColor = 'purple';
+            if (v.functionalType === 'indirect_labor' || v.functionalType === 'direct_labor') typeColor = 'purple';
             if (v.functionalType === 'cif') typeColor = 'amber';
             if (v.functionalType === 'fixed_gasto') typeColor = 'cyan';
 
@@ -42,7 +42,9 @@ function VoucherTable({ vouchers, products, onEdit, onDelete }) {
                   </Badge>
                 </td>
                 <td className="text-secondary" style={{ fontSize: '0.8rem' }}>
-                  {v.associatedProduct === 'all' ? 'General (Taller/Empresa)' : (linkedProduct ? linkedProduct.name : 'Desconocido')}
+                  {v.functionalType === 'direct_materials' 
+                    ? (linkedProduct ? linkedProduct.name : 'Producto Desconocido') 
+                    : 'Base Consolidada (CIF/SIF)'}
                 </td>
                 <td className="text-right text-bold">{formatCurrency(v.amount)}</td>
                 <td className="text-center">
@@ -62,9 +64,20 @@ function VoucherTable({ vouchers, products, onEdit, onDelete }) {
             <tr>
               <td colSpan="6" className="empty-state">
                 <FileText size={32} className="empty-state-icon" />
-                <h3>No hay comprobantes cargados</h3>
-                <p>Haga clic en "Cargar Comprobante" para registrar facturas e insumos.</p>
+                <h3>No se encontraron comprobantes</h3>
+                <p>No hay gastos que coincidan con los filtros o la búsqueda actual.</p>
               </td>
+            </tr>
+          )}
+          {vouchers.length > 0 && (
+            <tr className="totals-row">
+              <td colSpan="4">
+                Subtotal Filtrado ({vouchers.length} {vouchers.length === 1 ? 'comprobante' : 'comprobantes'})
+              </td>
+              <td className="text-right text-bold" style={{ color: 'var(--primary)' }}>
+                {formatCurrency(vouchers.reduce((sum, v) => sum + (Number(v.amount) || 0), 0))}
+              </td>
+              <td></td>
             </tr>
           )}
         </tbody>

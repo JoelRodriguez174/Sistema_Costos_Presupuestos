@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import ProductTable from '../organisms/ProductTable';
 import Button from '../atoms/Button';
-import { Plus } from 'lucide-react';
+import { Plus, Search, X } from 'lucide-react';
+import { normalizeSearchText } from '../../utils/formatters';
 
 function ProductsSection({ 
   products, 
@@ -9,6 +10,17 @@ function ProductsSection({
   onEditProductClick, 
   onDeleteProductClick
 }) {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredProducts = useMemo(() => {
+    const term = normalizeSearchText(searchTerm);
+    if (!term) return products;
+    return products.filter(p => {
+      const name = normalizeSearchText(p.name);
+      return name.includes(term);
+    });
+  }, [products, searchTerm]);
+
   return (
     <div>
       <div className="page-title-area">
@@ -23,8 +35,38 @@ function ProductsSection({
       </div>
 
       <div className="panel">
+        <div className="table-toolbar">
+          <div className="search-box">
+            <span className="search-icon-wrapper">
+              <Search size={14} />
+            </span>
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Buscar por nombre de producto..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button 
+                type="button"
+                onClick={() => setSearchTerm('')}
+                className="search-clear-btn"
+                title="Limpiar búsqueda"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+            Mostrando <strong>{filteredProducts.length}</strong> de <strong>{products.length}</strong> productos
+          </div>
+        </div>
+
         <ProductTable 
-          products={products}
+          products={filteredProducts}
           onEdit={onEditProductClick}
           onDelete={onDeleteProductClick}
         />

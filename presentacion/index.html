@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presentación — Sistema de Costos y Presupuestos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --bg-card: #ffffff;
+      --border: #e2e8f0;
+      --border-focus: #2563eb;
+      --text: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --blue: #2563eb;
+      --blue-light: #eff6ff;
+      --blue-badge: #1d4ed8;
+      --font: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand { display: flex; align-items: center; gap: 0.6rem; }
+
+    .brand-icon {
+      width: 30px; height: 30px;
+      background: var(--blue);
+      border-radius: 6px;
+      display: grid; place-items: center;
+      font-weight: 700; font-size: 0.85rem; color: white;
+    }
+
+    .brand-title { font-size: 0.9rem; font-weight: 700; color: var(--text); }
+    .brand-sub { font-size: 0.7rem; color: var(--text-muted); }
+
+    .nav-controls { display: flex; align-items: center; gap: 0.5rem; }
+
+    .btn {
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: border-color 0.15s, background 0.15s;
+      text-decoration: none;
+    }
+    .btn:hover { border-color: var(--blue); background: var(--blue-light); }
+
+    .btn-primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: white;
+    }
+    .btn-primary:hover { background: #1d4ed8; }
+
+    .slide-select {
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      outline: none;
+    }
+    .slide-select:focus { border-color: var(--blue); }
+
+    /* ── Main ── */
+    main { flex: 1; padding: 1rem 1.5rem; max-width: 1600px; margin: 0 auto; width: 100%; }
+
+    .slide { display: none; animation: fadeIn 0.2s ease; }
+    .slide.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Slide Header */
+    .slide-header {
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.7rem;
+    }
+    .slide-title-area h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .slide-title-area p {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      margin-top: 0.15rem;
+    }
+    .slide-badge {
+      background: var(--blue-light);
+      border: 1px solid #dbeafe;
+      color: var(--blue);
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    /* Two-column layout */
+    .slide-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    /* Screen Container */
+    .screen-box {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .screen-bar {
+      background: #f1f5f9;
+      padding: 0.4rem 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .screen-dots { display: flex; gap: 0.3rem; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot.r { background: #fca5a5; }
+    .dot.y { background: #fcd34d; }
+    .dot.g { background: #86efac; }
+    .screen-url { font-size: 0.68rem; font-family: var(--font-mono); color: var(--text-muted); }
+
+    .screen-img-wrap {
+      position: relative;
+      width: 100%;
+      background: #f8fafc;
+    }
+    .screen-img-wrap img { width: 100%; display: block; }
+
+    /* Pins — estilo limpio, sin neón, sin glow */
+    .pin {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      width: 28px; height: 28px;
+      background: var(--blue);
+      border: 2px solid #fff;
+      color: white;
+      font-weight: 700;
+      font-size: 0.78rem;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+      z-index: 10;
+      transition: transform 0.15s, background 0.15s;
+    }
+    .pin:hover, .pin.hl {
+      transform: translate(-50%, -50%) scale(1.2);
+      background: #1d4ed8;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.4);
+    }
+
+    /* Explanations */
+    .exp-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding-right: 0.25rem;
+    }
+    .exp-list::-webkit-scrollbar { width: 4px; }
+    .exp-list::-webkit-scrollbar-track { background: transparent; }
+    .exp-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+
+    .exp-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--border);
+      border-radius: 6px;
+      padding: 0.75rem 0.9rem;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .exp-card:hover {
+      border-color: #93c5fd;
+      border-left-color: var(--blue);
+      background: #fafbff;
+    }
+    .exp-card.hl {
+      border-color: var(--blue);
+      border-left-color: var(--blue);
+      background: var(--blue-light);
+    }
+
+    .exp-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.45rem; }
+    .exp-num {
+      width: 22px; height: 22px;
+      background: var(--blue);
+      color: white;
+      font-weight: 700;
+      font-size: 0.72rem;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+    .exp-card.hl .exp-num { background: #1d4ed8; }
+    .exp-title { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+
+    .exp-body { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.78rem; line-height: 1.4; }
+    .exp-row { display: flex; gap: 0.3rem; align-items: baseline; }
+    .exp-row strong {
+      font-weight: 600;
+      color: var(--blue-badge);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      flex-shrink: 0;
+      min-width: 55px;
+    }
+    .exp-row span { color: var(--text-secondary); }
+    .exp-row.how span { color: var(--text-muted); }
+
+    .code { 
+      background: #f1f5f9; 
+      border: 1px solid #e2e8f0; 
+      color: #1e40af; 
+      padding: 0.05rem 0.25rem; 
+      border-radius: 3px; 
+      font-family: var(--font-mono); 
+      font-size: 0.72rem; 
+    }
+
+    /* Cover / Formula slide */
+    .full-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2rem;
+    }
+    .hero-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    .hero-sub {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      max-width: 800px;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .overview-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .overview-card:hover { border-color: var(--blue); }
+    .overview-num {
+      display: inline-block;
+      width: 24px; height: 24px;
+      background: var(--blue-light);
+      color: var(--blue);
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 0.78rem;
+      text-align: center;
+      line-height: 24px;
+      margin-bottom: 0.4rem;
+    }
+    .overview-card-title { font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+    .overview-card-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
+
+    /* Formula Grid */
+    .formula-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .formula-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--blue);
+      border-radius: 6px;
+      padding: 1rem;
+    }
+    .formula-title { font-size: 0.88rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem; }
+    .formula-code {
+      background: #fff;
+      border: 1px solid var(--border);
+      padding: 0.6rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: #1e40af;
+      line-height: 1.5;
+      margin-bottom: 0.4rem;
+    }
+    .formula-desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.3; }
+
+    /* Footer */
+    footer {
+      background: #fff;
+      border-top: 1px solid var(--border);
+      padding: 0.5rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      bottom: 0;
+      z-index: 100;
+    }
+    .shortcuts {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 0.8rem;
+    }
+    .kbd {
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 0.05rem 0.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-secondary);
+    }
+
+    @media print {
+      header, footer, .nav-controls { display: none !important; }
+      .slide { display: block !important; page-break-after: always; }
+      .slide-grid { grid-template-columns: 1fr 1fr !important; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="brand-icon">SC</div>
+      <div>
+        <div class="brand-title">Sistema de Costos y Presupuestos</div>
+        <div class="brand-sub">Presentación funcional y técnica</div>
+      </div>
+    </div>
+    <div class="nav-controls">
+      <select id="slideSelect" class="slide-select" onchange="goTo(Number(this.value))">
+        <option value="0">1. Portada</option>
+        <option value="1">2. Dashboard: KPIs y Cobertura</option>
+        <option value="2">3. Dashboard: Simulación</option>
+        <option value="3">4. Catálogo de Productos</option>
+        <option value="4">5. Modal de Producto</option>
+        <option value="5">6. Comprobantes y Gastos</option>
+        <option value="6">7. Modal de Comprobante</option>
+        <option value="7">8. Análisis de Costo y Margen</option>
+        <option value="8">9. Fórmulas y Metodología</option>
+      </select>
+      <button class="btn" onclick="prev()">← Anterior</button>
+      <button class="btn btn-primary" onclick="next()">Siguiente →</button>
+      <a href="Sistema_de_Costos_Presentacion.pptx" download class="btn">📥 PowerPoint</a>
+      <button class="btn" onclick="window.print()">Imprimir / PDF</button>
+      <button class="btn" onclick="fullscreen()">⛶</button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- SLIDE 0: PORTADA -->
+    <div class="slide active" id="s0">
+      <div class="full-card">
+        <div class="slide-badge" style="margin-bottom:0.5rem;">PRESENTACIÓN FUNCIONAL Y TÉCNICA</div>
+        <h1 class="hero-title">Sistema de Costos y Presupuestos</h1>
+        <p class="hero-sub">
+          Plataforma web de gestión financiera multiproducto. Implementa <strong>Costeo por Absorción con Masa Consolidada CIF/SIF</strong>, asignación total por drivers operativos, análisis de punto de equilibrio y simulación interactiva de escenarios.
+        </p>
+        <h3 style="font-size:1rem; font-weight:600; margin-bottom:0.5rem;">Recorrido pantalla por pantalla:</h3>
+        <div class="overview-grid">
+          <div class="overview-card" onclick="goTo(1)">
+            <span class="overview-num">01</span>
+            <div class="overview-card-title">Tablero de Control (Dashboard)</div>
+            <div class="overview-card-desc">KPIs financieros, masa consolidada CIF/SIF, punto de equilibrio, simulación de escenarios y gráficos de rentabilidad.</div>
+          </div>
+          <div class="overview-card" onclick="goTo(3)">
+            <span class="overview-num">02</span>
+            <div class="overview-card-title">Catálogo de Productos</div>
+            <div class="overview-card-desc">Gestión de cartera de servicios, volúmenes mensuales, horas de producción y precios de competencia.</div>
+          </div>
+          <div class="overview-card" onclick="goTo(5)">
+            <span class="overview-num">03</span>
+            <div class="overview-card-title">Comprobantes y Gastos</div>
+            <div class="overview-card-desc">Carga y clasificación en 4 rubros (MPD, MOI, CIF, Admin) con separación de costos fijos y variables.</div>
+          </div>
+          <div class="overview-card" onclick="goTo(7)">
+            <span class="overview-num">04</span>
+            <div class="overview-card-title">Análisis de Costo y Margen</div>
+            <div class="overview-card-desc">Desglose unitario por absorción, precio sugerido por utilidad objetivo, punto de equilibrio por servicio.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 1: DASHBOARD KPIs -->
+    <div class="slide" id="s1">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <h1>Tablero de Control — KPIs Ejecutivos y Cobertura</h1>
+          <p>Pantalla principal: monitoreo financiero, absorción de costos fijos y punto de equilibrio.</p>
+        </div>
+        <span class="slide-badge">PANTALLA 1/4</span>
+      </div>
+      <div class="slide-grid">
+        <div class="screen-box">
+          <div class="screen-bar">
+            <div class="screen-dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+            <span class="screen-url">localhost:5173/</span><span></span>
+          </div>
+          <div class="screen-img-wrap">
+            <img src="img/01_dashboard.png" alt="Dashboard">
+            <div class="pin" style="top:3%;left:8%;" data-n="1" onclick="hl(1)">1</div>
+            <div class="pin" style="top:12%;left:85%;" data-n="2" onclick="hl(2)">2</div>
+            <div class="pin" style="top:22%;left:40%;" data-n="3" onclick="hl(3)">3</div>
+            <div class="pin" style="top:34%;left:40%;" data-n="4" onclick="hl(4)">4</div>
+            <div class="pin" style="top:41%;left:40%;" data-n="5" onclick="hl(5)">5</div>
+          </div>
+        </div>
+        <div class="exp-list">
+          <div class="exp-card" data-n="1" onmouseenter="hl(1)">
+            <div class="exp-head"><span class="exp-num">1</span><span class="exp-title">Barra de Navegación y Tema</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Barra superior con logotipo, 4 enlaces a los módulos y conmutador de tema oscuro/claro.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Permite acceder a cualquier módulo desde cualquier pantalla y adaptar la estética visual.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>React Router DOM v7 gestiona las rutas. Zustand persiste el tema en localStorage.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="2" onmouseenter="hl(2)">
+            <div class="exp-head"><span class="exp-num">2</span><span class="exp-title">Selector del Driver CIF/SIF</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Interruptor que alterna la base de distribución de costos indirectos.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Cambia el criterio de prorrateo entre <span class="code">Unidades Vendidas</span> y <span class="code">Horas de Producción</span>.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Recalcula <span class="code">factor = driverProducto / totalDriver</span> para cada producto al instante.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="3" onmouseenter="hl(3)">
+            <div class="exp-head"><span class="exp-num">3</span><span class="exp-title">Tarjetas KPI Financieras</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>4 indicadores: Ingresos Totales, Costo Variable, Margen de Contribución y Resultado Operativo.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Resume la salud comercial: si el resultado operativo es positivo hay ganancia; si es negativo, pérdida.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span><span class="code">Resultado Operativo = Margen de Contribución Total − Costos Fijos Totales</span>.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="4" onmouseenter="hl(4)">
+            <div class="exp-head"><span class="exp-num">4</span><span class="exp-title">Masa Consolidada de Indirectos CIF/SIF</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Panel que totaliza costos indirectos: MOI General, CIF Operativo y Gastos de Admin/Ventas.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Garantiza transparencia: todo gasto queda agrupado y el 100% se distribuye entre los productos.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Agrupa todos los comprobantes que no son MPD en una sola pasada, separando por rubro.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="5" onmouseenter="hl(5)">
+            <div class="exp-head"><span class="exp-num">5</span><span class="exp-title">Cobertura del Punto de Equilibrio</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Barra de progreso con las ventas mínimas necesarias y el margen de seguridad disponible.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Muestra cuánto del umbral se cubrió y el colchón disponible antes de entrar en pérdida.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span><span class="code">PE ($) = Costos Fijos / IMC Promedio</span>. Barra verde si supera 100%, roja si no.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: DASHBOARD SIMULACIÓN -->
+    <div class="slide" id="s2">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <h1>Tablero de Control — Simulación de Escenarios</h1>
+          <p>Motor de sensibilidad What-If, presets de estrés comercial y gráficos dinámicos.</p>
+        </div>
+        <span class="slide-badge">PANTALLA 1/4 · SIMULACIÓN</span>
+      </div>
+      <div class="slide-grid">
+        <div class="screen-box">
+          <div class="screen-bar">
+            <div class="screen-dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+            <span class="screen-url">Dashboard · Sección inferior</span><span></span>
+          </div>
+          <div class="screen-img-wrap">
+            <img src="img/01_dashboard.png" alt="Dashboard simulación">
+            <div class="pin" style="top:51%;left:40%;" data-n="1" onclick="hl(1)">1</div>
+            <div class="pin" style="top:58%;left:75%;" data-n="2" onclick="hl(2)">2</div>
+            <div class="pin" style="top:80%;left:30%;" data-n="3" onclick="hl(3)">3</div>
+            <div class="pin" style="top:75%;left:80%;" data-n="4" onclick="hl(4)">4</div>
+          </div>
+        </div>
+        <div class="exp-list">
+          <div class="exp-card" data-n="1" onmouseenter="hl(1)">
+            <div class="exp-head"><span class="exp-num">1</span><span class="exp-title">Alerta de Superávit / Déficit</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Banner que diagnostica si el escenario actual genera ganancia o pérdida.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Si hay superávit, muestra el monto ganado (verde). Si hay déficit, alerta el faltante (rojo).</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Evalúa <span class="code">resultadoOperativo >= 0</span> y renderiza la alerta con montos exactos.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="2" onmouseenter="hl(2)">
+            <div class="exp-head"><span class="exp-num">2</span><span class="exp-title">Presets de Escenarios What-If</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Botonera: +20% Ventas, −20% Ventas, +15% Precios, −10% Precios.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Aplica un escenario comercial a toda la cartera en un solo clic.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span><span class="code">applyPresetScenario()</span> aplica factores multiplicadores temporales en Zustand.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="3" onmouseenter="hl(3)">
+            <div class="exp-head"><span class="exp-num">3</span><span class="exp-title">Gráfico de Rentabilidad (SVG)</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Barras comparativas: Ventas, Costos Variables y Margen por cada línea de servicio.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Permite identificar visualmente qué servicios aportan más margen.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Genera rectángulos SVG normalizados al máximo ingreso, actualizados en tiempo real.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="4" onmouseenter="hl(4)">
+            <div class="exp-head"><span class="exp-num">4</span><span class="exp-title">Sliders de Simulación Individual</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Controles deslizantes de precio y volumen por producto.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Ajustan la demanda o precio de un servicio y muestran el resultado al instante.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Cada cambio llama <span class="code">updateSimOverride(prodId, campo, valor)</span> y recalcula todo.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: CATÁLOGO DE PRODUCTOS -->
+    <div class="slide" id="s3">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <h1>Catálogo de Productos y Servicios</h1>
+          <p>Gestión de cartera, parámetros de demanda, horas de producción y precios.</p>
+        </div>
+        <span class="slide-badge">PANTALLA 2/4</span>
+      </div>
+      <div class="slide-grid">
+        <div class="screen-box">
+          <div class="screen-bar">
+            <div class="screen-dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+            <span class="screen-url">localhost:5173/productos</span><span></span>
+          </div>
+          <div class="screen-img-wrap">
+            <img src="img/02_catalogo_productos.png" alt="Catálogo de Productos">
+            <div class="pin" style="top:17%;left:30%;" data-n="1" onclick="hl(1)">1</div>
+            <div class="pin" style="top:17%;left:88%;" data-n="2" onclick="hl(2)">2</div>
+            <div class="pin" style="top:29%;left:25%;" data-n="3" onclick="hl(3)">3</div>
+            <div class="pin" style="top:36%;left:50%;" data-n="4" onclick="hl(4)">4</div>
+            <div class="pin" style="top:42%;left:90%;" data-n="5" onclick="hl(5)">5</div>
+          </div>
+        </div>
+        <div class="exp-list">
+          <div class="exp-card" data-n="1" onmouseenter="hl(1)">
+            <div class="exp-head"><span class="exp-num">1</span><span class="exp-title">Título y Descripción del Módulo</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Encabezado 'Catálogo de Productos Peluquería' con subtítulo descriptivo.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Identifica el módulo: gestión de líneas capilares, volúmenes y precios de competencia.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Componente ProductsSection renderiza el encabezado estático.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="2" onmouseenter="hl(2)">
+            <div class="exp-head"><span class="exp-num">2</span><span class="exp-title">Botón '+ Nuevo Producto'</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Botón azul de acción principal para dar de alta un nuevo servicio.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Abre el modal de registro con los campos vacíos.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Ejecuta <span class="code">openForAdd()</span> en el hook useModal, reseteando el formulario.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="3" onmouseenter="hl(3)">
+            <div class="exp-head"><span class="exp-num">3</span><span class="exp-title">Buscador de Productos</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Campo de texto para filtrar la tabla por nombre del servicio.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Permite encontrar un servicio rápidamente cuando la cartera es extensa.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Filtra en memoria con <span class="code">useMemo</span> y un <span class="code">.filter()</span> sobre el nombre.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="4" onmouseenter="hl(4)">
+            <div class="exp-head"><span class="exp-num">4</span><span class="exp-title">Tabla del Catálogo</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Grilla con: Nombre, Unidades Vendidas, Horas Producción, Precio Competencia, Precio Venta.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Consolida las variables que alimentan el motor de costos: volumen, esfuerzo y mercado.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Mapea la colección <span class="code">products</span> del store con formateadores de moneda.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="5" onmouseenter="hl(5)">
+            <div class="exp-head"><span class="exp-num">5</span><span class="exp-title">Acciones (Editar / Eliminar)</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Iconos de lápiz (editar) y papelera (eliminar) en cada fila.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Modificar datos de un producto o quitarlo del catálogo con confirmación.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Editar carga el producto en el modal. Eliminar pide confirmación y borra en cascada.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: MODAL PRODUCTO -->
+    <div class="slide" id="s4">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <h1>Modal de Alta y Edición de Producto</h1>
+          <p>Formulario emergente para registrar o modificar servicios y sus variables operativas.</p>
+        </div>
+        <span class="slide-badge">SUB-PANTALLA · MODAL</span>
+      </div>
+      <div class="slide-grid">
+        <div class="screen-box">
+          <div class="screen-bar">
+            <div class="screen-dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+            <span class="screen-url">Modal de Producto</span><span></span>
+          </div>
+          <div class="screen-img-wrap">
+            <img src="img/03_modal_producto.png" alt="Modal Producto">
+            <div class="pin" style="top:32%;left:50%;" data-n="1" onclick="hl(1)">1</div>
+            <div class="pin" style="top:40%;left:50%;" data-n="2" onclick="hl(2)">2</div>
+            <div class="pin" style="top:48%;left:44%;" data-n="3" onclick="hl(3)">3</div>
+            <div class="pin" style="top:57%;left:44%;" data-n="4" onclick="hl(4)">4</div>
+            <div class="pin" style="top:67%;left:57%;" data-n="5" onclick="hl(5)">5</div>
+          </div>
+        </div>
+        <div class="exp-list">
+          <div class="exp-card" data-n="1" onmouseenter="hl(1)">
+            <div class="exp-head"><span class="exp-num">1</span><span class="exp-title">Encabezado del Modal y Cierre</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Título contextual ('Alta de Nuevo Producto' o 'Editar Producto') con botón X.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Identifica la operación en curso y permite cerrar sin guardar.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Evalúa <span class="code">editingItem</span> para definir el título. El botón X ejecuta <span class="code">close()</span>.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="2" onmouseenter="hl(2)">
+            <div class="exp-head"><span class="exp-num">2</span><span class="exp-title">Nombre del Producto</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Campo de texto obligatorio con placeholder descriptivo.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Registra la denominación comercial que aparecerá en todo el sistema.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Controlado por <span class="code">form.name</span>, validado con el atributo HTML5 <span class="code">required</span>.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="3" onmouseenter="hl(3)">
+            <div class="exp-head"><span class="exp-num">3</span><span class="exp-title">Unidades Vendidas y Horas de Producción</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Inputs numéricos de volumen mensual estimado y horas de trabajo.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Definen la escala de demanda y el esfuerzo requerido (drivers para prorrateo CIF).</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Las unidades calculan el costo unitario directo; las horas sirven como driver alternativo.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="4" onmouseenter="hl(4)">
+            <div class="exp-head"><span class="exp-num">4</span><span class="exp-title">Precio Competencia y Precio de Venta</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Campos monetarios de referencia de mercado y tarifa al público.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>El precio competencia es el benchmark; el precio de venta alimenta los ingresos brutos.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Ingresos = Precio × Unidades. Competitividad se evalúa comparando ambos precios.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="5" onmouseenter="hl(5)">
+            <div class="exp-head"><span class="exp-num">5</span><span class="exp-title">Botones Cancelar y Registrar</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Acciones del pie del modal: abortar o confirmar.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Guarda el producto en el store global o cancela sin cambios.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span><span class="code">handleSubmit</span> genera ID <span class="code">prod-timestamp</span> para altas o actualiza el existente.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: COMPROBANTES -->
+    <div class="slide" id="s5">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <h1>Comprobantes y Gastos — Clasificación Contable</h1>
+          <p>Registro de erogaciones, clasificación por rubro funcional y comportamiento económico.</p>
+        </div>
+        <span class="slide-badge">PANTALLA 3/4</span>
+      </div>
+      <div class="slide-grid">
+        <div class="screen-box">
+          <div class="screen-bar">
+            <div class="screen-dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+            <span class="screen-url">localhost:5173/comprobantes</span><span></span>
+          </div>
+          <div class="screen-img-wrap">
+            <img src="img/04_comprobantes_gastos.png" alt="Comprobantes">
+            <div class="pin" style="top:10%;left:30%;" data-n="1" onclick="hl(1)">1</div>
+            <div class="pin" style="top:10%;left:85%;" data-n="2" onclick="hl(2)">2</div>
+            <div class="pin" style="top:17%;left:65%;" data-n="3" onclick="hl(3)">3</div>
+            <div class="pin" style="top:25%;left:38%;" data-n="4" onclick="hl(4)">4</div>
+            <div class="pin" style="top:25%;left:53%;" data-n="5" onclick="hl(5)">5</div>
+            <div class="pin" style="top:25%;left:63%;" data-n="6" onclick="hl(6)">6</div>
+          </div>
+        </div>
+        <div class="exp-list">
+          <div class="exp-card" data-n="1" onmouseenter="hl(1)">
+            <div class="exp-head"><span class="exp-num">1</span><span class="exp-title">Encabezado del Módulo de Gastos</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Título 'Comprobantes y Registro de Gastos' con descripción de los rubros que abarca.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Contextualiza el módulo: cargar facturas de MPD, sueldos indirectos y costos de salón.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="2" onmouseenter="hl(2)">
+            <div class="exp-head"><span class="exp-num">2</span><span class="exp-title">Botón '+ Cargar Comprobante'</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Acción primaria que despliega el formulario de carga de gastos.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Ejecuta <span class="code">openForAdd(defaultForm)</span> con valores iniciales seguros.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="3" onmouseenter="hl(3)">
+            <div class="exp-head"><span class="exp-num">3</span><span class="exp-title">Filtros por Rubro (Tabs)</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Botones: Todos, Insumos (MPD), Mano de Obra (MOI), Costos Indirectos (CIF), Admin.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Filtran la tabla para mostrar solo los comprobantes de una categoría específica.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="4" onmouseenter="hl(4)">
+            <div class="exp-head"><span class="exp-num">4</span><span class="exp-title">Columna Tipo Funcional (Badges)</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Insignias de color: Materiales Directos (azul), MOI (verde), CIF (naranja), Admin (gris).</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Identifica a qué rubro contable pertenece cada erogación.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>MPD se asocia a un producto. MOI/CIF/Admin entran a la masa consolidada distribuida por driver.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="5" onmouseenter="hl(5)">
+            <div class="exp-head"><span class="exp-num">5</span><span class="exp-title">Columna Comportamiento (Variable / Fijo)</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Indica si el costo escala con la producción (Variable) o es constante (Fijo).</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Variables entran al Costo Variable Unitario. Fijos forman la base del Punto de Equilibrio.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="6" onmouseenter="hl(6)">
+            <div class="exp-head"><span class="exp-num">6</span><span class="exp-title">Columna 'Asociado A'</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Indica si el gasto va directo a un producto (MPD) o a la 'Base Consolidada (CIF/SIF)'.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>MPD: vinculado por <span class="code">associatedProduct</span>. Indirectos: distribuidos por driver.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: MODAL COMPROBANTE -->
+    <div class="slide" id="s6">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <h1>Modal de Carga de Comprobante / Gasto</h1>
+          <p>Formulario contable con clasificación funcional, comportamiento y asociación a producto.</p>
+        </div>
+        <span class="slide-badge">SUB-PANTALLA · MODAL</span>
+      </div>
+      <div class="slide-grid">
+        <div class="screen-box">
+          <div class="screen-bar">
+            <div class="screen-dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+            <span class="screen-url">Modal de Comprobante</span><span></span>
+          </div>
+          <div class="screen-img-wrap">
+            <img src="img/05_modal_comprobante.png" alt="Modal Comprobante">
+            <div class="pin" style="top:18%;left:42%;" data-n="1" onclick="hl(1)">1</div>
+            <div class="pin" style="top:24%;left:42%;" data-n="2" onclick="hl(2)">2</div>
+            <div class="pin" style="top:29%;left:35%;" data-n="3" onclick="hl(3)">3</div>
+            <div class="pin" style="top:29%;left:52%;" data-n="4" onclick="hl(4)">4</div>
+            <div class="pin" style="top:35%;left:42%;" data-n="5" onclick="hl(5)">5</div>
+            <div class="pin" style="top:39%;left:48%;" data-n="6" onclick="hl(6)">6</div>
+          </div>
+        </div>
+        <div class="exp-list">
+          <div class="exp-card" data-n="1" onmouseenter="hl(1)">
+            <div class="exp-head"><span class="exp-num">1</span><span class="exp-title">Encabezado y Cierre</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Título 'Cargar Comprobante / Gasto' con botón X. Cambia a 'Editar' en modo edición.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="2" onmouseenter="hl(2)">
+            <div class="exp-head"><span class="exp-num">2</span><span class="exp-title">Concepto / Detalle</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Texto descriptivo de la erogación (ej. 'Sueldos y jornales', 'Factura de luz').</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Identifica el gasto para que sea auditable y comprensible en la tabla.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="3" onmouseenter="hl(3)">
+            <div class="exp-head"><span class="exp-num">3</span><span class="exp-title">Importe ($)</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Monto numérico en pesos de la erogación.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Valor numérico mayor a 0, almacenado en <span class="code">form.amount</span>.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="4" onmouseenter="hl(4)">
+            <div class="exp-head"><span class="exp-num">4</span><span class="exp-title">Selector de Comportamiento</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Menú: Variable (varía con el volumen) o Fijo (constante en el período).</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Variable → entra al CVU. Fijo → entra a la base del Punto de Equilibrio.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="5" onmouseenter="hl(5)">
+            <div class="exp-head"><span class="exp-num">5</span><span class="exp-title">Tipo Funcional / Rubro</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Desplegable: MOI General, Materiales Directos (MPD), CIF de Salón, Gastos Admin.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Si se elige MPD, se activa un campo extra para vincular a un producto del catálogo.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="6" onmouseenter="hl(6)">
+            <div class="exp-head"><span class="exp-num">6</span><span class="exp-title">Cancelar / Cargar Gasto</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Función:</strong><span>Guarda el comprobante y recalcula todas las métricas al instante.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span><span class="code">addVoucher()</span> genera ID <span class="code">v-timestamp</span>; <span class="code">editVoucher()</span> actualiza.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: ANÁLISIS DE COSTOS -->
+    <div class="slide" id="s7">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <h1>Análisis de Costo y Margen — Motor de Absorción</h1>
+          <p>Desglose unitario [MPD + Cuota CIF], utilidad objetivo, punto de equilibrio y precio sugerido.</p>
+        </div>
+        <span class="slide-badge">PANTALLA 4/4</span>
+      </div>
+      <div class="slide-grid">
+        <div class="screen-box">
+          <div class="screen-bar">
+            <div class="screen-dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+            <span class="screen-url">localhost:5173/costos</span><span></span>
+          </div>
+          <div class="screen-img-wrap">
+            <img src="img/06_analisis_costos.png" alt="Análisis de Costos">
+            <div class="pin" style="top:10%;left:85%;" data-n="1" onclick="hl(1)">1</div>
+            <div class="pin" style="top:17%;left:25%;" data-n="2" onclick="hl(2)">2</div>
+            <div class="pin" style="top:35%;left:50%;" data-n="3" onclick="hl(3)">3</div>
+            <div class="pin" style="top:62%;left:50%;" data-n="4" onclick="hl(4)">4</div>
+            <div class="pin" style="top:88%;left:50%;" data-n="5" onclick="hl(5)">5</div>
+          </div>
+        </div>
+        <div class="exp-list">
+          <div class="exp-card" data-n="1" onmouseenter="hl(1)">
+            <div class="exp-head"><span class="exp-num">1</span><span class="exp-title">Selector de Driver CIF/SIF</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Interruptor para conmutar entre 'Unidades Producidas' y 'Horas de Producción'.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Cambia la base de prorrateo y recalcula las cuotas de absorción de cada producto.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Si se eligen horas, los servicios que demandan más tiempo absorben más CIF.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="2" onmouseenter="hl(2)">
+            <div class="exp-head"><span class="exp-num">2</span><span class="exp-title">Control de Utilidad Deseada (Target Margin)</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Slider de rango (5% a 90%) con fórmula: <span class="code">Precio = Costo Total / (1 − Margen%)</span>.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Fija el margen deseado y recalcula los precios sugeridos de toda la cartera.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span>Al basarse en Costo Total (que absorbe 100% de indirectos), garantiza utilidad neta real.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="3" onmouseenter="hl(3)">
+            <div class="exp-head"><span class="exp-num">3</span><span class="exp-title">Tabla: Desglose de Costo Técnico Unitario</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Columnas: Costo Directo (MPD), Cuota CIF, Costo Total Unit., CVU, Precio, Precio Sugerido, Estado.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Transparenta exactamente cuánto cuesta producir cada servicio y si el precio lo cubre.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span><span class="code">Costo Total Unit. = MPD Unit. + Cuota CIF Unit.</span> Badge verde/amarillo/rojo según cobertura.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="4" onmouseenter="hl(4)">
+            <div class="exp-head"><span class="exp-num">4</span><span class="exp-title">Tabla: Mix de Ventas y Contribución Marginal</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>Mix %, Ingresos, Costos Variables, Margen Contribución, IMC %, Pto. Equilibrio, Competitividad.</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Identifica los servicios que más aportan al pago de fijos y la posición competitiva.</span></div>
+              <div class="exp-row how"><strong>Lógica:</strong><span><span class="code">IMC = Margen / Precio</span>. <span class="code">PE (u.) = Costos Fijos Asignados / Margen Unitario</span>.</span></div>
+            </div>
+          </div>
+          <div class="exp-card" data-n="5" onmouseenter="hl(5)">
+            <div class="exp-head"><span class="exp-num">5</span><span class="exp-title">Guía Rápida para la Toma de Decisiones</span></div>
+            <div class="exp-body">
+              <div class="exp-row"><strong>Qué es:</strong><span>3 tarjetas: Cuota CIF/SIF, Índice IMC, Precio Sugerido (explicadas en lenguaje llano).</span></div>
+              <div class="exp-row"><strong>Función:</strong><span>Ayuda al dueño del negocio a interpretar los datos sin conocimientos contables avanzados.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: FÓRMULAS -->
+    <div class="slide" id="s8">
+      <div class="full-card">
+        <div class="slide-badge" style="margin-bottom:0.5rem;">REFERENCIA METODOLÓGICA</div>
+        <h1 class="hero-title">Fórmulas Financieras y Metodología</h1>
+        <p class="hero-sub">Resumen de las ecuaciones que gobiernan el motor de cálculo del sistema.</p>
+        <div class="formula-grid">
+          <div class="formula-card">
+            <div class="formula-title">1. Absorción de Masa Consolidada CIF/SIF (100%)</div>
+            <div class="formula-code">Masa Indirecta = Σ MOI + Σ CIF + Σ Gastos Admin<br>Factor Driver (%) = Driver_Prod / Total_Driver<br>Cuota CIF = Masa × Factor Driver</div>
+            <div class="formula-desc">El 100% de los gastos indirectos se distribuye entre los productos. Ningún costo queda sin asignar.</div>
+          </div>
+          <div class="formula-card">
+            <div class="formula-title">2. Costo Total y Costo Variable Unitario</div>
+            <div class="formula-code">Costo Total Unit. = MPD Unit. + Cuota CIF Unit.<br>Costo Variable Unit. = MPD Unit. + CIF Variable Unit.</div>
+            <div class="formula-desc">Base del costeo por absorción para fijar precios sostenibles que cubran toda la estructura.</div>
+          </div>
+          <div class="formula-card">
+            <div class="formula-title">3. Margen de Contribución e Índice IMC</div>
+            <div class="formula-code">Margen Unit. ($) = Precio − Costo Variable Unit.<br>IMC (%) = Margen Unit. / Precio<br>MC Total = Σ (Margen Unit. × Unidades)</div>
+            <div class="formula-desc">Cuánto dinero deja cada servicio para pagar los costos fijos y generar utilidad.</div>
+          </div>
+          <div class="formula-card">
+            <div class="formula-title">4. Punto de Equilibrio Multiproducto</div>
+            <div class="formula-code">PE ($) = Costos Fijos Totales / IMC Promedio<br>PE (u.) = Costos Fijos / MC Ponderado<br>Margen Seguridad = Ventas − Ventas Equilibrio</div>
+            <div class="formula-desc">Facturación mínima requerida para no entrar en zona de pérdidas operativas.</div>
+          </div>
+          <div class="formula-card">
+            <div class="formula-title">5. Fijación de Precios (Target Margin)</div>
+            <div class="formula-code">Precio Sugerido = Costo Total Unit. / (1 − Margen%)</div>
+            <div class="formula-desc">Mark-up financiero sobre costo total que asegura rentabilidad neta real.</div>
+          </div>
+          <div class="formula-card">
+            <div class="formula-title">6. Resultado Operativo Global</div>
+            <div class="formula-code">Resultado = MC Total − Costos Fijos Totales<br>Superávit si > 0 · Déficit si < 0</div>
+            <div class="formula-desc">Utilidad neta final del período simulado, tras absorber toda la estructura empresarial.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="shortcuts">
+      <span><span class="kbd">←</span> Anterior</span>
+      <span><span class="kbd">→</span> Siguiente</span>
+      <span><span class="kbd">F</span> Pantalla completa</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <span id="counter" style="font-weight:600;font-size:0.78rem;color:var(--text-muted);font-family:var(--font-mono);">1 / 9</span>
+      <button class="btn btn-primary" onclick="next()">Siguiente →</button>
+    </div>
+  </footer>
+
+  <script>
+    const N = 9;
+    let cur = 0;
+
+    function update() {
+      document.querySelectorAll('.slide').forEach((s, i) => s.classList.toggle('active', i === cur));
+      document.getElementById('slideSelect').value = cur;
+      document.getElementById('counter').textContent = `${cur + 1} / ${N}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    function next() { if (cur < N - 1) { cur++; update(); } }
+    function prev() { if (cur > 0) { cur--; update(); } }
+    function goTo(n) { if (n >= 0 && n < N) { cur = n; update(); } }
+
+    function hl(num) {
+      const s = document.querySelector('.slide.active');
+      if (!s) return;
+      s.querySelectorAll('.pin').forEach(p => p.classList.toggle('hl', Number(p.dataset.n) === num));
+      s.querySelectorAll('.exp-card').forEach(c => {
+        const match = Number(c.dataset.n) === num;
+        c.classList.toggle('hl', match);
+        if (match) c.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+      else if (e.key.toLowerCase() === 'f') fullscreen();
+    });
+
+    function fullscreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+      else document.exitFullscreen?.();
+    }
+  </script>
+</body>
+</html>

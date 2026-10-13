@@ -15,9 +15,9 @@ function VouchersPage() {
   const defaultForm = { 
     concept: '', 
     amount: 0, 
-    functionalType: products.length > 0 ? 'direct_materials' : 'cif', 
+    functionalType: 'indirect_labor', 
     behavior: 'variable', 
-    associatedProduct: products.length > 0 ? products[0].id : 'all' 
+    associatedProduct: 'all' 
   };
 
   const {
@@ -34,9 +34,9 @@ function VouchersPage() {
     openForEdit(v, (item) => ({
       concept: item.concept,
       amount: item.amount,
-      functionalType: item.functionalType,
+      functionalType: item.functionalType === 'direct_labor' ? 'indirect_labor' : item.functionalType,
       behavior: item.behavior,
-      associatedProduct: item.associatedProduct
+      associatedProduct: item.functionalType === 'direct_materials' ? item.associatedProduct : 'all'
     }));
   };
 
@@ -86,7 +86,7 @@ function VouchersPage() {
                   <input 
                     type="text" 
                     required 
-                    placeholder="Ej. Factura de envases goteros de vidrio"
+                    placeholder="Ej. Sueldos y jornales de estilistas o factura de luz"
                     value={form.concept}
                     onChange={(e) => setForm({ ...form, concept: e.target.value })}
                   />
@@ -110,38 +110,44 @@ function VouchersPage() {
                       onChange={(e) => setForm({ ...form, behavior: e.target.value })}
                     >
                       <option value="variable">Variable (Varía con el volumen)</option>
-                      <option value="fixed">Fijo (Constante)</option>
+                      <option value="fixed">Fijo (Constante en el período)</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="form-group">
-                  <label>Tipo Funcional:</label>
+                  <label>Tipo Funcional / Rubro:</label>
                   <select 
                     value={form.functionalType} 
                     onChange={(e) => {
                       const newType = e.target.value;
-                      let newProd = form.associatedProduct;
-                      if ((newType === 'direct_materials' || newType === 'direct_labor') && form.associatedProduct === 'all') {
-                        newProd = products.length > 0 ? products[0].id : 'all';
+                      let newProd = 'all';
+                      let newBehavior = form.behavior;
+                      if (newType === 'direct_materials') {
+                        newProd = products.length > 0 ? (form.associatedProduct !== 'all' ? form.associatedProduct : products[0].id) : 'all';
+                        newBehavior = 'variable';
                       }
-                      setForm({ ...form, functionalType: newType, associatedProduct: newProd });
+                      setForm({ ...form, functionalType: newType, associatedProduct: newProd, behavior: newBehavior });
                     }}
                   >
+                    <option value="indirect_labor">
+                      Mano de Obra General / Indirecta (MOI) - Masa Consolidada
+                    </option>
                     <option value="direct_materials" disabled={products.length === 0}>
-                      Materiales Directos (MPD) {products.length === 0 ? '(Requiere productos en catálogo)' : ''}
+                      Materiales Directos (MPD) {products.length === 0 ? '(Requiere productos en catálogo)' : '(Asignación Directa)'}
                     </option>
-                    <option value="direct_labor" disabled={products.length === 0}>
-                      Mano de Obra Directa (MOD) {products.length === 0 ? '(Requiere productos en catálogo)' : ''}
+                    <option value="cif">
+                      Costos Indirectos de Fabricación / Salón (CIF/SIF) - Masa Consolidada
                     </option>
-                    <option value="cif">Costos Indirectos de Fabricación (CIF)</option>
-                    <option value="fixed_gasto">Gasto Administrativo o de Ventas</option>
+                    <option value="fixed_gasto">
+                      Gastos de Administración y Comercialización - Masa Consolidada
+                    </option>
                   </select>
                 </div>
 
-                {(form.functionalType === 'direct_materials' || form.functionalType === 'direct_labor') && (
+                {form.functionalType === 'direct_materials' && (
                   <div className="form-group">
-                    <label>Producto Directamente Asociado:</label>
+                    <label>Producto Directamente Asociado (Insumo / MPD):</label>
                     <select 
                       value={form.associatedProduct} 
                       onChange={(e) => setForm({ ...form, associatedProduct: e.target.value })}

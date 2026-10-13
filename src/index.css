@@ -1,5 +1,5 @@
 :root {
-  /* Elegant & Sober Professional Palette (Light Mode Default) */
+  /* Clean, Sober Financial SaaS Palette (Anti-AI-Slop, High Contrast) */
   --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
   --bg-tertiary: #f1f5f9;
@@ -7,10 +7,10 @@
   --border-color: #e2e8f0;
   --border-hover: #cbd5e1;
   
-  --primary: #86198f; /* Elegant Plum / Wine (Cosmetic brand feel) */
-  --primary-hover: #701a75;
-  --primary-light: #fdf4ff;
-  --primary-border: #f5d0fe;
+  --primary: #1d4ed8; /* Corporate Navy / Professional Blue */
+  --primary-hover: #1e40af;
+  --primary-light: #eff6ff;
+  --primary-border: #bfdbfe;
   
   --secondary: #475569; /* Slate Gray */
   --secondary-hover: #334155;
@@ -31,24 +31,28 @@
   --info-light: #f0f9ff;
   --info-border: #bae6fd;
   
-  --text-primary: #1e293b;
+  --text-primary: #0f172a;
   --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-muted: #64748b;
   
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   
   --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
   
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
   
-  --transition: all 0.2s ease-in-out;
+  --transition: all 0.15s ease-in-out;
 }
 
-/* Utilities for replacing inline styles */
+/* Utilities for replacing inline styles & tabular numbers */
+table td, .kpi-value, .slider-val, .badge, .totals-row td {
+  font-variant-numeric: tabular-nums;
+}
+
 .text-bold { font-weight: 700; }
 .text-primary-bold { font-weight: 700; color: var(--primary); }
 .text-secondary { color: var(--text-secondary); }
@@ -87,17 +91,17 @@
 
 /* Optional Dark Mode (also sober, dark slate corporate, no neons) */
 .dark-theme {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
+  --bg-primary: #0b0f19;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1f2937;
   
-  --border-color: #334155;
-  --border-hover: #475569;
+  --border-color: #1f2937;
+  --border-hover: #374151;
   
-  --primary: #f0abfc;
-  --primary-hover: #e879f9;
-  --primary-light: rgba(240, 171, 252, 0.05);
-  --primary-border: rgba(240, 171, 252, 0.2);
+  --primary: #3b82f6;
+  --primary-hover: #60a5fa;
+  --primary-light: rgba(59, 130, 246, 0.1);
+  --primary-border: rgba(59, 130, 246, 0.3);
   
   --secondary: #94a3b8;
   --secondary-hover: #cbd5e1;
@@ -746,7 +750,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  padding: 1rem 0.5rem 2rem 2.5rem;
+  padding: 1rem 0.5rem 2rem 3.4rem;
   border-left: 1.5px solid var(--border-color);
   border-bottom: 1.5px solid var(--border-color);
 }
@@ -756,14 +760,14 @@ input[type="range"]::-webkit-slider-thumb:hover {
   left: 0;
   top: 0;
   bottom: 2rem;
-  width: 2rem;
+  width: 3rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
   text-align: right;
-  padding-right: 0.35rem;
+  padding-right: 0.4rem;
 }
 
 .chart-bar-group {
@@ -810,9 +814,41 @@ input[type="range"]::-webkit-slider-thumb:hover {
   z-index: 10;
 }
 
-.chart-bar.revenue { background: #0284c7; } /* Sober Blue */
-.chart-bar.cost { background: #cbd5e1; }    /* Sober Gray */
-.chart-bar.profit { background: var(--primary); } /* Brand Plum */
+.chart-bar.revenue { background: #2563eb; } /* Royal Blue */
+.chart-bar.cost { background: #94a3b8; }    /* Slate Gray */
+.chart-bar.profit { background: #0d9488; } /* Emerald / Teal */
+.chart-bar.profit.deficit { background: var(--danger, #ef4444); border-top: 2px solid #b91c1c; }
+
+/* Scenario Preset Buttons */
+.scenario-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.25rem 0.55rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.scenario-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--primary);
+}
+
+.scenario-btn.active {
+  background: var(--primary);
+  color: #ffffff !important;
+  border-color: var(--primary);
+  font-weight: 600;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+}
+
+.scenario-btn.reset-all {
+  background: rgba(29, 78, 216, 0.08);
+}
 
 .chart-x-label {
   position: absolute;
@@ -831,7 +867,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 .chart-legend {
   display: flex;
   justify-content: center;
-  gap: 1rem;
+  gap: 1.25rem;
   margin-top: 1.5rem;
   font-size: 0.75rem;
 }
@@ -849,9 +885,150 @@ input[type="range"]::-webkit-slider-thumb:hover {
   border-radius: 2px;
 }
 
-.legend-color.revenue { background: #0284c7; }
-.legend-color.cost { background: #cbd5e1; }
-.legend-color.profit { background: var(--primary); }
+.legend-color.revenue { background: #2563eb; }
+.legend-color.cost { background: #94a3b8; }
+.legend-color.profit { background: #0d9488; }
+
+/* Client-Friendly Table Toolbar, Search & Filter Pills */
+.table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+  max-width: 380px;
+  display: flex;
+  align-items: center;
+}
+
+.search-box input[type="text"].search-input,
+.search-box .search-input,
+input[type="text"].search-input {
+  width: 100%;
+  padding: 0.5rem 2.25rem 0.5rem 2.35rem !important;
+  font-size: 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  outline: none;
+  transition: var(--transition);
+}
+
+.search-box input[type="text"].search-input:focus,
+.search-box .search-input:focus,
+input[type="text"].search-input:focus {
+  border-color: var(--primary);
+  background: var(--bg-secondary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.search-icon-wrapper {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  z-index: 2;
+}
+
+.search-clear-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+
+.filter-pills {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.filter-pill:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.filter-pill.active {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* Breakeven Progress & Health Bar (kpi-dashboard-design) */
+.breakeven-banner {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.progress-track {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.progress-fill.surplus {
+  background: #10b981;
+}
+
+.progress-fill.deficit {
+  background: #ef4444;
+}
 
 /* Simulation list inside split */
 .sim-controls-panel {

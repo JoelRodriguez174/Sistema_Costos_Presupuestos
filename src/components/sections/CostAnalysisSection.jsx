@@ -22,7 +22,7 @@ function CostAnalysisSection({
       <div className="page-title-area">
         <div>
           <h2 className="page-title">Análisis de Costos y Márgenes</h2>
-          <p className="page-subtitle">Desglose de costos de producción unitarios y análisis de absorción general.</p>
+          <p className="page-subtitle">Desglose de costos unitarios [Materia Prima + Cuota Consolidada CIF/SIF] y absorción total.</p>
         </div>
         
         <CifBaseToggle cifBase={cifBase} onToggle={onCifBaseToggle} />
@@ -45,9 +45,9 @@ function CostAnalysisSection({
           <div className="margin-info">
             <Info size={14} className="text-primary-icon" />
             <span>
-              <strong>Cálculo de Margen:</strong> <code>Precio = Costo / (1 - Margen%)</code>
+              <strong>Cálculo de Margen:</strong> <code>Precio = Costo Total / (1 - Margen%)</code>
               <br />
-              Asegura que el porcentaje elegido de cada venta sea ganancia neta, absorbiendo correctamente la estructura de costos.
+              Absorbe el 100% de la masa indirecta consolidada (MOI + CIF + Gastos Fijos) asegurando utilidad neta real.
             </span>
           </div>
         </div>

@@ -9,12 +9,12 @@ function CifBaseToggle({ cifBase, onToggle }) {
   return (
     <div className="cif-toggle-container">
       <span className="cif-toggle-label">
-        Base Asignación CIF:
+        Driver de Asignación CIF/SIF:
       </span>
       <Switch 
         active={cifBase === 'horas_produccion'} 
         onChange={onToggle} 
-        label={cifBase === 'unidades_vendidas' ? 'Unidades Vendidas (mensual)' : 'Horas Producción (mensual)'}
+        label={cifBase === 'unidades_vendidas' ? 'Unidades Producidas' : 'Horas Hombre / Producción'}
       />
     </div>
   );
